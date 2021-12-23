@@ -1,38 +1,50 @@
 import throttle from 'lodash.throttle';
 
-const form = document.querySelector('.feedback-form');
-const formEmail = document.querySelector('[name="email"]');
-const formMessage = document.querySelector('[name="message"]');
-const LOCALSTORAGE_KEY = 'feedback-form-state';
-let formInput = {};
+const refs = {
+  form: document.querySelector('.feedback-form'),
+  email: document.querySelector('input'),
+  message: document.querySelector('textarea'),
+};
 
-form.addEventListener('input', throttle(saveFormInput, 500));
-form.addEventListener('submit', submitHandler);
+const STORAGE_KEY = 'feedback-form-state';
 
-checkAndSetSavedFormInput();
+initForm();
 
-function saveFormInput(event) {
-  formInput[event.target.name] = event.target.value;
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(formInput));
-}
+refs.form.addEventListener('submit', onSubmit);
 
-function checkAndSetSavedFormInput() {
-  const storedValues = localStorage.getItem(LOCALSTORAGE_KEY);
-
-  if (storedValues) {
-    const { email, message } = JSON.parse(storedValues);
-
-    formEmail.value = email;
-    formMessage.value = message;
-
-    formInput = JSON.parse(storedValues);
+function onSubmit(e) {
+  e.preventDefault();
+  const userData = {};
+  const formData = new FormData(refs.form);
+  const formElements = e.currentTarget.elements;
+  const formEmail = formElements.email.value;
+  const formMessage = formElements.message.value;
+  if (!formEmail || !formMessage) {
+    return alert('заполните все поля');
   }
+  formData.forEach((value, name) => (userData[name] = value));
+
+  console.log(userData);
+  e.currentTarget.reset();
+  localStorage.removeItem(STORAGE_KEY);
 }
 
-function submitHandler(event) {
-  event.preventDefault();
+refs.form.addEventListener('input', throttle(onFormInput, 500));
 
-  console.log(formInput);
-  event.target.reset();
-  localStorage.removeItem(LOCALSTORAGE_KEY);
+function onFormInput(e) {
+  let savedData = localStorage.getItem(STORAGE_KEY);
+
+  savedData = savedData ? JSON.parse(savedData) : {};
+  savedData[e.target.name] = e.target.value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+}
+
+function initForm() {
+  let savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    savedData = JSON.parse(savedData);
+    Object.entries(savedData).forEach(([name, value]) => {
+      refs.form.elements[name].value = value;
+    });
+  }
 }

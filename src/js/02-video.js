@@ -10,7 +10,7 @@ player.on('timeupdate', throttle(savePlayTime, 1000));
 function savePlayTime({ seconds }) {
   localStorage.setItem(LOCALSTORAGE_KEY, seconds);
 }
-
-if (LOCALSTORAGE_KEY) {
-  player.setCurrentTime(localStorage.getItem(LOCALSTORAGE_KEY));
+const saveTime = localStorage.getItem(LOCALSTORAGE_KEY);
+if (saveTime !== null) {
+  player.setCurrentTime(saveTime);
 }
